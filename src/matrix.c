@@ -2,18 +2,23 @@
 
 
 int SparseMatrix(int** M, int** S, int* D){
-        int rows = D[0];
-    int cols = D[1];
-    int max_dimension = (rows > cols) ? rows : cols;
-    int non_zero_count = 0;
+    int r,c = D[0],D[1]; //initializes values
+    int max;
+    //checks which is the greater dimension
+    if (r > c) {
+        max = r;
+    }
+    else {
+        max = c;
+    }
+    int res = 0;
 
-    // Check if the matrix qualifies as a sparse matrix
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            if (*(*(M + i) + j) != 0) {
-                non_zero_count++;
-                if (non_zero_count > max_dimension) {
-                    // Matrix is not sparse
+    // Check if the matrix sparse or 
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
+            if (*(*(M + i) + j) != 0) { // if we found non-zero element we increase count
+                res++;
+                if (res > max) {//if there are more non-zero elements than highest dimension, then not sparse
                     return -1;
                 }
             }
@@ -21,32 +26,32 @@ int SparseMatrix(int** M, int** S, int* D){
     }
 
     // Initialize the sparse matrix S using pointer dereferencing
-    *S = (int*)malloc(3 * max_dimension * sizeof(int));
-    int* sRow = *S;
-    int* sColumn = *S + max_dimension;
-    int* sValue = *S + 2 * max_dimension;
+    *S = (int*)malloc(3 * max * sizeof(int));
+    int* sr = *S; //rows of s
+    int* sc = *S + max; //columns of s
+    int* sz = *S + 2 * max;
 
     // Initialize S with zeros
-    for (int i = 0; i < max_dimension; i++) {
-        sRow[i] = 0;
-        sColumn[i] = 0;
-        sValue[i] = 0;
+    for (int i = 0; i < max; i++) {
+        sr[i] = 0;
+        sc[i] = 0;
+        sz[i] = 0;
     }
 
     int col_index = 0;
     // Fill the sparse matrix S with non-zero elements using pointer dereferencing
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
             if (*(*(M + i) + j) != 0) {
-                sRow[col_index] = i;
-                sColumn[col_index] = j;
-                sValue[col_index] = *(*(M + i) + j);
+                sr[col_index] = i;
+                sc[col_index] = j;
+                sz[col_index] = *(*(M + i) + j);
                 col_index++;
             }
         }
     }
 
-    return non_zero_count;
+    return res;
 }
 int Addition(int** M, int** N, int** A, int* D){
    // TO BE IMPLEMENTED
