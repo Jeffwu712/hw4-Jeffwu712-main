@@ -2,17 +2,17 @@
 
 
 int SparseMatrix(int** M, int** S, int* D){
-    int r,c = D[0],D[1]; //initializes values
+    int r = D[0]; //initializes values
+    int c = D[1];
     int max;
-    //checks which is the greater dimension
-    if (r > c) {
+    
+    if (r > c) {//checks which is the greater dimension
         max = r;
     }
     else {
         max = c;
     }
     int res = 0;
-
     // Check if the matrix sparse or 
     for (int i = 0; i < r; i++) {
         for (int j = 0; j < c; j++) {
@@ -24,46 +24,162 @@ int SparseMatrix(int** M, int** S, int* D){
             }
         }
     }
-
-    // Initialize the sparse matrix S using pointer dereferencing
-    *S = (int*)malloc(3 * max * sizeof(int));
+    
     int* sr = *S; //rows of s
-    int* sc = *S + max; //columns of s
-    int* sz = *S + 2 * max;
+    int* sc = max + *S; //columns of s
+    int* sv = (2 * max) + *S;
 
-    // Initialize S with zeros
-    for (int i = 0; i < max; i++) {
-        sr[i] = 0;
-        sc[i] = 0;
-        sz[i] = 0;
-    }
-
-    int col_index = 0;
-    // Fill the sparse matrix S with non-zero elements using pointer dereferencing
+    int column = 0;
+        // Fill the sparse matrix S with non-zero elements using pointer dereferencing
     for (int i = 0; i < r; i++) {
         for (int j = 0; j < c; j++) {
             if (*(*(M + i) + j) != 0) {
-                sr[col_index] = i;
-                sc[col_index] = j;
-                sz[col_index] = *(*(M + i) + j);
-                col_index++;
+                *(sr + column) = i;
+                *(sc + column) = *(*(M + i) + j);
+                *(sv + column) = j;
+                column++;
             }
         }
+}
+    return res; //returns res which contains the amount of non zero values
+}
+int Addition(int** M, int** N, int** A, int* D) {
+    int rows1 = D[0];
+    int columns1 = D[1];
+    int rows2 = D[2];
+    int columns2 = D[3];
+    int rows3 = D[4];
+    int columns3 = D[5];
+    if (rows1 == rows2 && columns1 == columns2) {//if compatiable 
+        if (rows3 == rows1 && columns3 == columns1) {//A also comptabile 
+            for (int i = 0; i < rows1; i++) {
+                for (int j = 0; j < columns1; j++) {//striaghtforwads addition
+                    *((*(A + i)) + j) =  *((*(N + i)) + j) + *((*(M + i)) + j); 
+                }
+            }
+            return 1; 
+        } else if (rows3 >= rows1 && columns3 >= columns1) {//// A is oversized
+            for (int i = 0; i < rows1; i++) {//addition on all elements
+                for (int j = 0; j < columns1; j++) {
+                    *((*(A + i)) + j) = *((*(N + i)) + j) + *((*(M + i)) + j);
+                }
+            }
+            return 2;
+        } else {//if A not compatible 
+            return -3;
+        }
+    } else {//M and N not compatible
+        for (int i = 0; i < rows3; i++) {//additon of overlap
+            for (int j = 0; j < columns3; j++) {
+                if (columns1&& j < i < rows1 ) {
+                    *((*(A + i)) + j) = *((*(M + i)) + j);
+                    if ( j < columns2&& i < rows2) {
+                        *((*(A + i)) + j) += *((*(N + i)) + j);
+                    }
+                } else if (i < rows2 && j < columns2) {
+                    *((*(A + i)) + j) = *((*(N + i)) + j);
+                }
+            }
+        }
+        if (rows3 >= rows1 && columns3 >= columns1 && rows3 >= rows2 && columns3 >= columns2) {//A overlap
+            for (int i = 0; i < rows1; i++) {
+                for (int j = 0; j < columns1; j++) {
+                    *((*(A + i)) + j) = *((*(N + i)) + j) + *((*(M + i)) + j);
+                }
+            }
+            return -1;
+        } else {
+            return -2;
+        }
     }
+}
+int Multiplication(int** M, int** N, int** A, int* D) {
+    int rows1 = D[0];
+    int rows2 = D[2];
+    int rows3 = D[4];
+    int column1 = D[1];
+    int column2 = D[3];
+    int column3 = D[5];
+    for (int i = 0; i < rows3; i++) {
+        for (int j = 0; j < column3; j++) {
+            int ans = 0;
+            if (i < rows1 && j < column2) {
+                for (int k = 0; k < column1; k++) {
+                    ans += *((*(M + i)) + k) * *((*(N + k)) + j);
+                }
+            }
+            *((*(A + i)) + j) = ans;
+        }
+    }
+    if (column1 != rows2) {
+        if ( column3 >= column2&&rows3 >= rows1 ) {// If A is oversized
+            for (int i = 0; i < rows1; i++) { //calc ans
+                for (int j = 0; j < column2; j++) {
+                    int ans = 0;
+                    for (int k = 0; k < column1; k++) {
+                        ans += *((*(M + i)) + k) * *((*(N + k)) + j);
+                    }
+                    *((*(A + i)) + j) = ans;
+                }
+            }
+            return -1;
+        } else { // IF A not compatible, and holds overlapping dimensions
+            return -2;
+        }
+    } else {//M and N are compatible
+        if (rows3 == rows1 && column3 == column2) {
+            return 1;
+        } else if (rows3 >= rows1 && column3 >= column2) {//// A is oversized
+            for (int i = 0; i < rows1; i++) {//multiplication
+                for (int j = 0; j < column2; j++) {
+                    int ans = 0;
+                    for (int k = 0; k < column1; k++) {
+                        ans += *((*(M + i)) + k) * *((*(N + k)) + j);
+                    }
+                    *((*(A + i)) + j) = ans;
+                }
+            }
+            return 2; 
+        } else {//A not compatiable
+            return -3;
+        }
+    }
+}
+int Transpose(int** A, int** AT, int* D) {
+    int rows1 = D[0];
+    int column1 = D[1];
+    int rows2 = D[2];
+    int column2 = D[3];
 
-    return res;
-}
-int Addition(int** M, int** N, int** A, int* D){
-   // TO BE IMPLEMENTED
-    abort();
-}
-int Multiplication(int** M, int** N, int** A, int* D){
-   // TO BE IMPLEMENTED
-    abort();
-}
-int Transpose(int** A, int** AT, int* D){
-    // TO BE IMPLEMENTED
-    abort();
+    if (rows1 == column2 && column1 == rows2) {//A AT compatible
+        for (int i = 0; i < rows1; i++) {
+            for (int j = 0; j < column1; j++) {
+                *((*(AT + j)) + i) = *((*(A + i)) + j);
+            }
+        }
+        return 1; 
+    } else if (rows2 >= column1 && column2 >= rows1) {////compatible and oversized
+        for (int i = 0; i < rows1; i++) {
+            for (int j = 0; j < column1; j++) {
+                *((*(AT + j)) + i) = *((*(A + i)) + j);
+            }
+        }
+        return 2; 
+    } else {// Dimensions not compatible
+        
+        for (int i = 0; i < rows2; i++) {
+            for (int j = 0; j < column2; j++) {
+                if (i < rows1 && j < column1) {
+                    *((*(AT + i)) + j) = *((*(A + i)) + j);
+                }
+            }
+        }
+        if (rows2 >= column1 && column2 >= rows1) {
+            return -1; 
+        } else {//not compatible and no space
+            return -1; // Keep this as -1
+        }
+    }
 }
 
 // Helper functions for Testing
